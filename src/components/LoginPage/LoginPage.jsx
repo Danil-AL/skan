@@ -42,11 +42,11 @@ const LoginPage = ({ onNavigate }) => {
           <p className={styles.leftText}>
             Для оформления подписки<br />на тариф необходимо<br />авторизоваться.
           </p>
-          <img src="/Characters.png" alt="" className={styles.leftImg} />
+          <img src="/skan/Characters.png" alt="" className={styles.leftImg} />
         </div>
 
         <div className={styles.card}>
-          <img src="/close.png" alt="" className={styles.closeIcon} />
+          <img src="/skan/close.png" alt="" className={styles.closeIcon} />
 
           <div className={styles.tabs}>
             <button
@@ -89,9 +89,9 @@ const LoginPage = ({ onNavigate }) => {
 
           <p className={styles.socialLabel}>Войти через:</p>
           <div className={styles.socials}>
-            <a href="#"><img src="/google.png" alt="Google" /></a>
-            <a href="#"><img src="/facebook.png" alt="Facebook" /></a>
-            <a href="#"><img src="/yandex.png" alt="Yandex" /></a>
+            <a href="#"><img src="/skan/google.png" alt="Google" /></a>
+            <a href="#"><img src="/skan/facebook.png" alt="Facebook" /></a>
+            <a href="#"><img src="/skan/yandex.png" alt="Yandex" /></a>
           </div>
         </div>
       </div>

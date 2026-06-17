@@ -88,7 +88,7 @@ const TariffCard = ({ t, isCurrent }) => {
           <ul className={styles.featuresList}>
             {t.features.map((f, i) => (
               <li key={i} className={styles.featureItem}>
-                <img className={styles.featureIcon} src="/icon.svg" alt="" />
+                <img className={styles.featureIcon} src="/skan/icon.svg" alt="" />
                 <span>{f}</span>
               </li>
             ))}

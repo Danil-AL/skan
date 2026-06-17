@@ -18,7 +18,7 @@ const Hero = ({ onSearch }) => {
           <button className={styles.btn} onClick={onSearch}>Запросить данные</button>
         </div>
         <div className={styles.right}>
-          <img src="/man.png" alt="man" className={styles.image} />
+          <img src="/skan/man.png" alt="man" className={styles.image} />
         </div>
       </div>
     </section>

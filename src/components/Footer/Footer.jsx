@@ -8,7 +8,7 @@ const Footer = () => {
       <div className={styles.inner}>
        
         <a href="/" className={styles.logo}>
-          <img src="/footer-logo.png" alt="СКАН" />
+          <img src="/skan/footer-logo.png" alt="СКАН" />
         </a>
 
         <div className={styles.right}>

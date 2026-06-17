@@ -92,7 +92,7 @@ const SliderSection = ({ title = 'Заголовок', cards = defaultCards }) =
           </button>
         </div>
 
-        <img className={styles.heroImage} src="/hero.png" alt="" />
+        <img className={styles.heroImage} src="/skan/hero.png" alt="" />
       </div>
     </section>
   );

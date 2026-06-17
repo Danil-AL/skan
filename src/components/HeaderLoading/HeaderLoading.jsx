@@ -6,7 +6,7 @@ const HeaderLoading = () => {
     <header className={styles.header}>
       <div className={styles.inner}>
         <a href="/" className={styles.logo}>
-          <img src="/logo.svg" alt="СКАН" />
+          <img src="/skan/header-logo.png" alt="СКАН" />
         </a>
 
         <nav className={styles.nav}>

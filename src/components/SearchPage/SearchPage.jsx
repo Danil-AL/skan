@@ -166,10 +166,10 @@ const SearchPage = () => {
 
           <div className={styles.imagesBlock}>
             <div className={styles.topImages}>
-              <img className={styles.docImg} src="/Document.png" alt="" />
-              <img className={styles.foldersImg} src="/Folders.png" alt="" />
+              <img className={styles.docImg} src="/skan/Document.png" alt="" />
+              <img className={styles.foldersImg} src="/skan/Folders.png" alt="" />
             </div>
-            <img className={styles.innheroImg} src="/innhero.png" alt="" />
+            <img className={styles.innheroImg} src="/skan/innhero.png" alt="" />
           </div>
         </div>
       </div>

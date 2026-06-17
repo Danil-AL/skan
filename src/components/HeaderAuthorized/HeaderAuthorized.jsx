@@ -10,7 +10,7 @@ const HeaderAuthorized = ({ onNavigate }) => {
     <header className={styles.header}>
       <div className={styles.inner}>
         <a href="/" className={styles.logo} onClick={(e) => { e.preventDefault(); onNavigate('home') }}>
-          <img src="/header-logo.png" alt="СКАН" />
+          <img src="/skan/header-logo.png" alt="СКАН" />
         </a>
 
         <nav className={styles.nav}>
