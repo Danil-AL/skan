@@ -1,0 +1,130 @@
+.section {
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 110px 60px 60px;
+}
+
+.title {
+  font-family: 'Ferry', sans-serif;
+  font-size: 45px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  margin-bottom: 50px;
+  text-align: left;
+}
+
+.sliderWrapper {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.slider {
+  flex: 1;
+  overflow: hidden;
+}
+
+.track {
+  display: flex;
+  gap: 24px;
+  transition: transform 0.4s ease;
+}
+
+.card {
+  flex: 0 0 calc((100% - 48px) / 3);
+  min-width: 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.cardLogo {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardLogo img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.logoPlaceholder {
+  width: 100%;
+  height: 100%;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #999;
+}
+
+.cardText {
+  font-size: 18px;
+  line-height: 1.5;
+  color: #333;
+  margin: 0;
+  font-weight: 400;
+}
+
+.arrow {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1a1a1a;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.arrow:hover:not(:disabled) {
+  color: rgba(89, 112, 255, 1);
+}
+
+.arrow:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  margin-top: 70px;
+}
+
+@media (max-width: 768px) {
+  .inner {
+    padding: 60px 16px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .sliderWrapper {
+    gap: 12px;
+  }
+
+  .card {
+    flex: 0 0 100%;
+  }
+}

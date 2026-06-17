@@ -1,0 +1,87 @@
+.footer {
+  width: 100%;
+  background-color: rgba(2, 148, 145, 1);
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 60px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.logo img {
+  height: 108px;
+  width: auto;
+}
+
+/* ── Contacts block ── */
+.contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-style: normal;
+  text-align: right;
+}
+
+.contacts span,
+.contactLink {
+  font-size: 13px;
+  color: #ffffff;
+  text-decoration: none;
+  line-height: 1.5;
+}
+
+.contactLink:hover {
+  text-decoration: underline;
+}
+
+/* ── Copyright ── */
+.copyright {
+  font-size: 13px;
+  color: #ffffff;
+  white-space: nowrap;
+  margin: 0;
+  text-align: right;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 60px;
+    gap: 16px;
+  }
+
+  .right {
+    align-items: center;
+  }
+
+  .contacts {
+    align-items: center;
+    text-align: center;
+  }
+
+  .copyright {
+    text-align: center;
+  }
+}

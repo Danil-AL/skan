@@ -1,0 +1,10 @@
+export { default as Header } from "./Header/Header";
+export { default as HeaderAuthorized } from "./HeaderAuthorized/HeaderAuthorized";
+export { default as HeaderLoading } from "./HeaderLoading/HeaderLoading";
+export { default as LoginForm } from "./LoginForm/LoginForm";
+export { default as LoginPage } from "./LoginPage/LoginPage";
+export { default as Footer } from "./Footer/Footer";
+export { default as Hero } from "./Hero/Hero";
+export { default as SliderSection } from "./SliderSection/SliderSection";
+export { default as TariffsSection } from "./TariffsSection/TariffsSection";
+export { default as SearchPage } from "./SearchPage/SearchPage";
