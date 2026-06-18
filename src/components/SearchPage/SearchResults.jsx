@@ -28,8 +28,58 @@ function getTagInfo(attrs) {
   return tags
 }
 
+const mockHistogramData = {
+  data: [
+    {
+      data: [
+        { date: '2024-01-01T00:00:00+03:00', value: 245 },
+        { date: '2024-02-01T00:00:00+03:00', value: 312 },
+        { date: '2024-03-01T00:00:00+03:00', value: 189 },
+        { date: '2024-04-01T00:00:00+03:00', value: 421 },
+        { date: '2024-05-01T00:00:00+03:00', value: 278 },
+        { date: '2024-06-01T00:00:00+03:00', value: 356 },
+      ],
+      histogramType: 'totalDocuments',
+    },
+    {
+      data: [
+        { date: '2024-01-01T00:00:00+03:00', value: 12 },
+        { date: '2024-02-01T00:00:00+03:00', value: 8 },
+        { date: '2024-03-01T00:00:00+03:00', value: 15 },
+        { date: '2024-04-01T00:00:00+03:00', value: 22 },
+        { date: '2024-05-01T00:00:00+03:00', value: 5 },
+        { date: '2024-06-01T00:00:00+03:00', value: 18 },
+      ],
+      histogramType: 'riskFactors',
+    },
+  ],
+}
+
+const mockEncodedIds = Array.from({ length: 25 }, (_, i) => `mock-id-${i + 1}`)
+
+const mockDoc = (i) => ({
+  schemaVersion: '1.0',
+  id: `mock-doc-${i}`,
+  version: 1,
+  issueDate: new Date(2024, 0, i + 1).toISOString(),
+  url: '#',
+  source: { id: i, groupId: 1, name: 'Источник информации', categoryId: 7, levelId: 1 },
+  dedupClusterId: `cluster-${i}`,
+  title: { text: `Публикация №${i} — анализ рынка и корпоративных событий`, markup: '' },
+  content: { markup: `<p>Текст публикации №${i}. Здесь описываются важные корпоративные события, финансовые показатели и рыночные тенденции, которые могут повлиять на деятельность компании. Детальный анализ позволяет сделать выводы о текущем состоянии бизнеса.</p>` },
+  attributes: {
+    isTechNews: i % 3 === 0,
+    isAnnouncement: i % 5 === 0,
+    isDigest: i % 7 === 0,
+    wordCount: 150 + i * 10,
+    influence: 100,
+    coverage: { value: 50000, state: 'hasData' },
+  },
+  language: 'russian',
+})
+
 const SearchResults = ({ params, onBack }) => {
-  const { token } = useAuth()
+  const { token, isMock } = useAuth()
 
   const [histogramData, setHistogramData] = useState(null)
   const [histogramLoading, setHistogramLoading] = useState(true)
@@ -53,6 +103,20 @@ const SearchResults = ({ params, onBack }) => {
 
     const searchBody = buildSearchBody(params)
 
+    if (isMock) {
+      setTimeout(() => {
+        setHistogramData(mockHistogramData)
+        histogramsDone.current = true
+        setHistogramLoading(false)
+      }, 800)
+      setTimeout(() => {
+        setAllIds(mockEncodedIds)
+        idsDone.current = true
+        setIdsLoading(false)
+      }, 1200)
+      return
+    }
+
     getHistograms(token, searchBody)
       .then((data) => {
         setHistogramData(data)
@@ -71,7 +135,7 @@ const SearchResults = ({ params, onBack }) => {
       })
       .catch(() => {})
       .finally(() => setIdsLoading(false))
-  }, [token, params])
+  }, [token, params, isMock])
 
   useEffect(() => {
     if (!idsDone.current || allIds.length === 0) return
@@ -84,6 +148,16 @@ const SearchResults = ({ params, onBack }) => {
       if (batch.length === 0) return
       setDocsLoading(true)
       setDocsError('')
+
+      if (isMock) {
+        setTimeout(() => {
+          const mockResults = batch.map((_, idx) => mockDoc(start + idx + 1))
+          setDocuments((prev) => [...prev, ...mockResults])
+          setDocsLoading(false)
+        }, 500)
+        return
+      }
+
       getDocuments(token, batch)
         .then((results) => {
           const okDocs = results
@@ -96,7 +170,7 @@ const SearchResults = ({ params, onBack }) => {
         })
         .finally(() => setDocsLoading(false))
     },
-    [allIds, token],
+    [allIds, token, isMock],
   )
 
   const handleLoadMore = () => {

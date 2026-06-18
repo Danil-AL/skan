@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(initialUser)
   const [isLoading, setIsLoading] = useState(false)
   const [infoLoading, setInfoLoading] = useState(false)
+  const [isMock, setIsMock] = useState(false)
 
   useEffect(() => {
     if (initialToken && initialUser) {
@@ -67,6 +68,7 @@ export const AuthProvider = ({ children }) => {
         if (loginValue === MOCK_LOGIN && password === MOCK_PASSWORD) {
           tokenStr = 'mock-token-' + Date.now()
           expire = new Date(Date.now() + 86400000).toISOString()
+          setIsMock(true)
         } else {
           throw new Error('Неправильная пара логин/пароль')
         }
@@ -107,7 +109,7 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, infoLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, infoLoading, isMock, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
