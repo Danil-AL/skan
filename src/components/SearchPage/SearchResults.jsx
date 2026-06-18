@@ -146,7 +146,9 @@ const SearchResults = ({ params, onBack }) => {
       return
     }
 
-    getHistograms(token, buildHistogramBody(params))
+    const searchBody = buildSearchBody(params)
+
+    getHistograms(token, searchBody)
       .then((data) => {
         setHistogramData(data)
         histogramsDone.current = true
@@ -156,7 +158,7 @@ const SearchResults = ({ params, onBack }) => {
       })
       .finally(() => setHistogramLoading(false))
 
-    searchObjects(token, buildSearchBody(params))
+    searchObjects(token, searchBody)
       .then((data) => {
         const ids = (data.items || []).map((item) => item.encodedId)
         setAllIds(ids)
@@ -187,8 +189,8 @@ const SearchResults = ({ params, onBack }) => {
     histogramData.data.forEach((h) => {
       ;(h.data || []).forEach((p) => {
         const key = p.date
-        if (h.histogramType === 'TotalDocuments') totalMap[key] = p.value
-        if (h.histogramType === 'RiskFactors') riskMap[key] = p.value
+        if (h.histogramType === 'totalDocuments') totalMap[key] = p.value
+        if (h.histogramType === 'riskFactors') riskMap[key] = p.value
       })
     })
     const allKeys = Object.keys({ ...totalMap, ...riskMap }).sort()
@@ -384,54 +386,10 @@ const SearchResults = ({ params, onBack }) => {
   )
 }
 
-function buildHistogramBody(params) {
-  return {
-    intervalType: 'Month',
-    histogramTypes: ['TotalDocuments', 'RiskFactors'],
-    issueDateInterval: {
-      startDate: params.dateFrom ? `${params.dateFrom}T00:00:00+03:00` : '2019-01-01T00:00:00+03:00',
-      endDate: params.dateTo ? `${params.dateTo}T23:59:59+03:00` : '2025-12-31T23:59:59+03:00',
-    },
-    searchContext: {
-      targetSearchEntitiesContext: {
-        targetSearchEntities: [
-          {
-            type: 'Company',
-            sparkId: null,
-            entityId: null,
-            inn: parseInt(params.inn, 10),
-            maxFullness: !!params.maxFullness,
-            inBusinessNews: params.inBusinessNews ? true : null,
-          },
-        ],
-        onlyMainRole: !!params.onlyMainRole,
-        tonality: params.tonality || 'Any',
-        onlyWithRiskFactors: !!params.onlyWithRiskFactors,
-        riskFactors: { and: [], or: [], not: [] },
-        themes: { and: [], or: [], not: [] },
-      },
-      themesFilter: { and: [], or: [], not: [] },
-    },
-    searchArea: {
-      includedSources: [],
-      excludedSources: [],
-      includedSourceGroups: [],
-      excludedSourceGroups: [],
-    },
-    attributeFilters: {
-      excludeTechNews: !params.includeTechNews,
-      excludeAnnouncements: !params.includeAnnouncements,
-      excludeDigests: !params.includeDigests,
-    },
-    similarMode: 'Duplicates',
-    limit: params.limit || 100,
-    sortType: 'SourceInfluence',
-    sortDirectionType: 'Desc',
-  }
-}
-
 function buildSearchBody(params) {
   return {
+    intervalType: 'month',
+    histogramTypes: ['totalDocuments', 'riskFactors'],
     issueDateInterval: {
       startDate: params.dateFrom ? `${params.dateFrom}T00:00:00+03:00` : '2019-01-01T00:00:00+03:00',
       endDate: params.dateTo ? `${params.dateTo}T23:59:59+03:00` : '2025-12-31T23:59:59+03:00',
@@ -440,7 +398,7 @@ function buildSearchBody(params) {
       targetSearchEntitiesContext: {
         targetSearchEntities: [
           {
-            type: 'Company',
+            type: 'company',
             sparkId: null,
             entityId: null,
             inn: parseInt(params.inn, 10),
@@ -449,7 +407,7 @@ function buildSearchBody(params) {
           },
         ],
         onlyMainRole: !!params.onlyMainRole,
-        tonality: params.tonality || 'Any',
+        tonality: params.tonality || 'any',
         onlyWithRiskFactors: !!params.onlyWithRiskFactors,
         riskFactors: { and: [], or: [], not: [] },
         themes: { and: [], or: [], not: [] },
@@ -467,10 +425,10 @@ function buildSearchBody(params) {
       excludeAnnouncements: !params.includeAnnouncements,
       excludeDigests: !params.includeDigests,
     },
-    similarMode: 'Duplicates',
+    similarMode: 'duplicates',
     limit: params.limit || 100,
-    sortType: 'SourceInfluence',
-    sortDirectionType: 'Desc',
+    sortType: 'sourceInfluence',
+    sortDirectionType: 'desc',
   }
 }
 

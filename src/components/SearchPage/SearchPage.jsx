@@ -4,9 +4,9 @@ import { asset } from '../../utils/assets'
 import styles from './SearchPage.module.css'
 
 const tonalityOptions = [
-  { label: 'Любая', value: 'Any' },
-  { label: 'Позитивная', value: 'Positive' },
-  { label: 'Негативная', value: 'Negative' },
+  { label: 'Любая', value: 'any' },
+  { label: 'Позитивная', value: 'positive' },
+  { label: 'Негативная', value: 'negative' },
 ]
 
 const checkboxes = [
@@ -35,7 +35,7 @@ const SearchPage = () => {
   const [searching, setSearching] = useState(false)
   const [searchParams, setSearchParams] = useState(null)
   const [inn, setInn] = useState('')
-  const [tonality, setTonality] = useState('Any')
+  const [tonality, setTonality] = useState('any')
   const [docCount, setDocCount] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
