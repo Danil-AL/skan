@@ -98,50 +98,6 @@ const SearchResults = ({ params, onBack }) => {
   const histogramsDone = useRef(false)
   const idsDone = useRef(false)
 
-  useEffect(() => {
-    if (!token || !params) return
-
-    const searchBody = buildSearchBody(params)
-
-    if (isMock) {
-      setTimeout(() => {
-        setHistogramData(mockHistogramData)
-        histogramsDone.current = true
-        setHistogramLoading(false)
-      }, 800)
-      setTimeout(() => {
-        setAllIds(mockEncodedIds)
-        idsDone.current = true
-        setIdsLoading(false)
-      }, 1200)
-      return
-    }
-
-    getHistograms(token, searchBody)
-      .then((data) => {
-        setHistogramData(data)
-        histogramsDone.current = true
-      })
-      .catch((err) => {
-        setHistogramError(err?.response?.data?.message || 'Ошибка загрузки сводки')
-      })
-      .finally(() => setHistogramLoading(false))
-
-    searchObjects(token, searchBody)
-      .then((data) => {
-        const ids = (data.items || []).map((item) => item.encodedId)
-        setAllIds(ids)
-        idsDone.current = true
-      })
-      .catch(() => {})
-      .finally(() => setIdsLoading(false))
-  }, [token, params, isMock])
-
-  useEffect(() => {
-    if (!idsDone.current || allIds.length === 0) return
-    loadDocsBatch(0, ITEMS_PER_PAGE)
-  }, [allIds])
-
   const loadDocsBatch = useCallback(
     (start, count) => {
       const batch = allIds.slice(start, start + count)
@@ -173,6 +129,48 @@ const SearchResults = ({ params, onBack }) => {
     [allIds, token, isMock],
   )
 
+  useEffect(() => {
+    if (!token || !params) return
+
+    if (isMock) {
+      setTimeout(() => {
+        setHistogramData(mockHistogramData)
+        histogramsDone.current = true
+        setHistogramLoading(false)
+      }, 800)
+      setTimeout(() => {
+        setAllIds(mockEncodedIds)
+        idsDone.current = true
+        setIdsLoading(false)
+      }, 1200)
+      return
+    }
+
+    getHistograms(token, buildHistogramBody(params))
+      .then((data) => {
+        setHistogramData(data)
+        histogramsDone.current = true
+      })
+      .catch((err) => {
+        setHistogramError(err?.response?.data?.message || 'Ошибка загрузки сводки')
+      })
+      .finally(() => setHistogramLoading(false))
+
+    searchObjects(token, buildSearchBody(params))
+      .then((data) => {
+        const ids = (data.items || []).map((item) => item.encodedId)
+        setAllIds(ids)
+        idsDone.current = true
+      })
+      .catch(() => {})
+      .finally(() => setIdsLoading(false))
+  }, [token, params, isMock])
+
+  useEffect(() => {
+    if (!idsDone.current || allIds.length === 0) return
+    loadDocsBatch(0, ITEMS_PER_PAGE)
+  }, [allIds, loadDocsBatch])
+
   const handleLoadMore = () => {
     const nextVisible = visibleCount + ITEMS_PER_PAGE
     const currentDocs = documents.length
@@ -189,8 +187,8 @@ const SearchResults = ({ params, onBack }) => {
     histogramData.data.forEach((h) => {
       ;(h.data || []).forEach((p) => {
         const key = p.date
-        if (h.histogramType === 'totalDocuments') totalMap[key] = p.value
-        if (h.histogramType === 'riskFactors') riskMap[key] = p.value
+        if (h.histogramType === 'TotalDocuments') totalMap[key] = p.value
+        if (h.histogramType === 'RiskFactors') riskMap[key] = p.value
       })
     })
     const allKeys = Object.keys({ ...totalMap, ...riskMap }).sort()
@@ -386,10 +384,10 @@ const SearchResults = ({ params, onBack }) => {
   )
 }
 
-function buildSearchBody(params) {
+function buildHistogramBody(params) {
   return {
-    intervalType: 'month',
-    histogramTypes: ['totalDocuments', 'riskFactors'],
+    intervalType: 'Month',
+    histogramTypes: ['TotalDocuments', 'RiskFactors'],
     issueDateInterval: {
       startDate: params.dateFrom ? `${params.dateFrom}T00:00:00+03:00` : '2019-01-01T00:00:00+03:00',
       endDate: params.dateTo ? `${params.dateTo}T23:59:59+03:00` : '2025-12-31T23:59:59+03:00',
@@ -398,7 +396,7 @@ function buildSearchBody(params) {
       targetSearchEntitiesContext: {
         targetSearchEntities: [
           {
-            type: 'company',
+            type: 'Company',
             sparkId: null,
             entityId: null,
             inn: parseInt(params.inn, 10),
@@ -407,7 +405,7 @@ function buildSearchBody(params) {
           },
         ],
         onlyMainRole: !!params.onlyMainRole,
-        tonality: params.tonality || 'any',
+        tonality: params.tonality || 'Any',
         onlyWithRiskFactors: !!params.onlyWithRiskFactors,
         riskFactors: { and: [], or: [], not: [] },
         themes: { and: [], or: [], not: [] },
@@ -425,10 +423,54 @@ function buildSearchBody(params) {
       excludeAnnouncements: !params.includeAnnouncements,
       excludeDigests: !params.includeDigests,
     },
-    similarMode: 'duplicates',
+    similarMode: 'Duplicates',
     limit: params.limit || 100,
-    sortType: 'sourceInfluence',
-    sortDirectionType: 'desc',
+    sortType: 'SourceInfluence',
+    sortDirectionType: 'Desc',
+  }
+}
+
+function buildSearchBody(params) {
+  return {
+    issueDateInterval: {
+      startDate: params.dateFrom ? `${params.dateFrom}T00:00:00+03:00` : '2019-01-01T00:00:00+03:00',
+      endDate: params.dateTo ? `${params.dateTo}T23:59:59+03:00` : '2025-12-31T23:59:59+03:00',
+    },
+    searchContext: {
+      targetSearchEntitiesContext: {
+        targetSearchEntities: [
+          {
+            type: 'Company',
+            sparkId: null,
+            entityId: null,
+            inn: parseInt(params.inn, 10),
+            maxFullness: !!params.maxFullness,
+            inBusinessNews: params.inBusinessNews ? true : null,
+          },
+        ],
+        onlyMainRole: !!params.onlyMainRole,
+        tonality: params.tonality || 'Any',
+        onlyWithRiskFactors: !!params.onlyWithRiskFactors,
+        riskFactors: { and: [], or: [], not: [] },
+        themes: { and: [], or: [], not: [] },
+      },
+      themesFilter: { and: [], or: [], not: [] },
+    },
+    searchArea: {
+      includedSources: [],
+      excludedSources: [],
+      includedSourceGroups: [],
+      excludedSourceGroups: [],
+    },
+    attributeFilters: {
+      excludeTechNews: !params.includeTechNews,
+      excludeAnnouncements: !params.includeAnnouncements,
+      excludeDigests: !params.includeDigests,
+    },
+    similarMode: 'Duplicates',
+    limit: params.limit || 100,
+    sortType: 'SourceInfluence',
+    sortDirectionType: 'Desc',
   }
 }
 
