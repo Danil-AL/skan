@@ -182,15 +182,6 @@ const SearchResults = ({ params, onBack }) => {
     setVisibleCount(nextVisible)
   }
 
-  const loaded = documents.slice(0, visibleCount)
-  const totalIds = allIds.length
-  const allLoaded = visibleCount >= totalIds && !idsLoading
-
-  const maxHistogramIndex = Math.max(0, mergedHistograms.length - 1)
-
-  const prevHistogram = () => setHistogramIndex((i) => Math.max(0, i - 1))
-  const nextHistogram = () => setHistogramIndex((i) => Math.min(maxHistogramIndex, i + 1))
-
   const mergedHistograms = useMemo(() => {
     if (!histogramData?.data) return []
     const totalMap = {}
@@ -211,6 +202,15 @@ const SearchResults = ({ params, onBack }) => {
   }, [histogramData])
 
   const totalDocuments = mergedHistograms.reduce((s, h) => s + h.total, 0)
+
+  const loaded = documents.slice(0, visibleCount)
+  const totalIds = allIds.length
+  const allLoaded = visibleCount >= totalIds && !idsLoading
+
+  const maxHistogramIndex = Math.max(0, mergedHistograms.length - 1)
+
+  const prevHistogram = () => setHistogramIndex((i) => Math.max(0, i - 1))
+  const nextHistogram = () => setHistogramIndex((i) => Math.min(maxHistogramIndex, i + 1))
 
   if (histogramLoading) {
     return (
