@@ -1,3 +1,4 @@
+import { asset } from '../../utils/assets'
 import styles from './Header.module.css';
 
 
@@ -5,9 +6,9 @@ const Header = ({ onLogin, onNavigate }) => {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-       
+        
         <a href="/" className={styles.logo} onClick={(e) => { e.preventDefault(); onNavigate('home') }}>
-          <img src="/skan/header-logo.png" alt="СКАН" />
+          <img src={asset('header-logo.png')} alt="СКАН" />
         </a>
 
         <nav className={styles.nav}>

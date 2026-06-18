@@ -1,5 +1,6 @@
 import { useTilt } from '../../hooks/useTilt';
 import { useAuth } from '../../context/useAuth';
+import { asset } from '../../utils/assets';
 import styles from './TariffsSection.module.css';
 
 const tariffs = [
@@ -7,7 +8,7 @@ const tariffs = [
     id: 1,
     title: 'Beginner',
     desc: 'Для небольшого исследования',
-    logo: '/lamp.svg',
+    logo: 'lamp.svg',
     price: '799 ₽',
     oldPrice: '1 200 ₽',
     installment: 'или 150 ₽/мес. при рассрочке на 24 мес.',
@@ -22,7 +23,7 @@ const tariffs = [
     id: 2,
     title: 'Pro',
     desc: 'Для HR и фрилансеров',
-    logo: '/arr.svg',
+    logo: 'arr.svg',
     price: '1 299 ₽',
     oldPrice: '2 600 ₽',
     installment: 'или 279 ₽/мес. при рассрочке на 24 мес.',
@@ -37,7 +38,7 @@ const tariffs = [
     id: 3,
     title: 'Business',
     desc: 'Для корпоративных клиентов',
-    logo: '/lap.svg',
+    logo: 'lap.svg',
     price: '2 379 ₽',
     oldPrice: '3 700 ₽',
     features: ['Все пункты тарифа Pro', 'Безлимитное количество запросов', 'Приоритетная поддержка'],
@@ -68,7 +69,7 @@ const TariffCard = ({ t, isCurrent }) => {
             <h3 className={styles.cardTitle}>{t.title}</h3>
             <p className={styles.cardDesc}>{t.desc}</p>
           </div>
-          <img className={styles.cardLogo} src={t.logo} alt="" />
+          <img className={styles.cardLogo} src={asset(t.logo)} alt="" />
         </div>
       </div>
 
@@ -88,7 +89,7 @@ const TariffCard = ({ t, isCurrent }) => {
           <ul className={styles.featuresList}>
             {t.features.map((f, i) => (
               <li key={i} className={styles.featureItem}>
-                <img className={styles.featureIcon} src="/skan/icon.svg" alt="" />
+                <img className={styles.featureIcon} src={asset('icon.svg')} alt="" />
                 <span>{f}</span>
               </li>
             ))}

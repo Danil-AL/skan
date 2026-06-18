@@ -1,99 +1,144 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useAuth } from '../../context/useAuth'
+import { getHistograms, searchObjects, getDocuments } from '../../api/scanApi'
+import { asset } from '../../utils/assets'
 import styles from './SearchPage.module.css'
 
-const mockHistograms = [
-  { period: '2024-01', total: 245, risks: 12 },
-  { period: '2024-02', total: 312, risks: 8 },
-  { period: '2024-03', total: 189, risks: 15 },
-  { period: '2024-04', total: 421, risks: 22 },
-  { period: '2024-05', total: 278, risks: 5 },
-  { period: '2024-06', total: 356, risks: 18 },
-  { period: '2024-07', total: 198, risks: 10 },
-  { period: '2024-08', total: 445, risks: 27 },
-]
+const ITEMS_PER_PAGE = 10
 
-const mockDocuments = [
-  {
-    id: 1,
-    date: '13.09.2021',
-    source: 'Комсомольская правда KP.RU',
-    title: 'Скиллфэктори — лучшая онлайн-школа для будущих айтишников',
-    tags: ['Технические новости'],
-    tagColor: 'rgba(255, 182, 79, 1)',
-    text: 'SkillFactory — школа для всех, кто хочет изменить свою карьеру и жизнь. С 2016 года обучение прошли 20 000+ человек из 40 стран с 4 континентов, самому взрослому студенту сейчас 86 лет. Выпускники работают в Сбере, Cisco, Bayer, Nvidia, МТС, Ростелекоме, Mail.ru, Яндексе, Ozon и других топовых компаниях. Принципы SkillFactory: акцент на практике, забота о студентах и ориентир на трудоустройство. 80% обучения — выполнение упражнений и реальных проектов. Каждого студента поддерживают менторы, 2 саппорт-линии и комьюнити курса. А карьерный центр помогает составить резюме, подготовиться к собеседованиям и познакомиться с IT-рекрутерами.',
-    wordCount: 752,
-    image: '/skan/last1.png',
-    link: '#',
-  },
-  {
-    id: 2,
-    date: '15.10.2021',
-    source: 'VC.RU',
-    title: 'Работа в Data Science в 2022 году: тренды, навыки и обзор специализаций',
-    tags: ['Технические новости'],
-    tagColor: 'rgba(255, 182, 79, 1)',
-    text: 'Кто такой Data Scientist и чем он занимается? Data Scientist — это специалист, который работает с большими массивами данных, чтобы с их помощью решить задачи бизнеса. Простой пример использования больших данных и искусственного интеллекта — умные ленты в социальных сетях. На основе ваших просмотров и лайков алгоритм выдает рекомендации с контентом, который может быть вам интересен. Эту модель создал и обучил дата-сайентист, и скорее всего, не один. В небольших компаниях и стартапах дата-сайентист делает все: собирает и очищает данные, создает математическую модель для их анализа, тестирует ее и презентует готовое решение бизнесу.',
-    wordCount: 684,
-    image: '/skan/last2.png',
-    link: '#',
-  },
-  {
-    id: 3,
-    date: '20.11.2021',
-    source: 'РБК',
-    title: 'Искусственный интеллект в бизнесе: как компании внедряют AI-решения',
-    tags: ['Технические новости', 'Анонсы и события'],
-    tagColor: 'rgba(255, 182, 79, 1)',
-    text: 'Крупнейшие российские компании активно внедряют решения на основе искусственного интеллекта. По данным исследования, более 60% организаций уже используют AI в своих бизнес-процессах. Наиболее популярные направления — компьютерное зрение, обработка естественного языка и предиктивная аналитика.',
-    wordCount: 523,
-    image: '/skan/last1.png',
-    link: '#',
-  },
-  {
-    id: 4,
-    date: '05.12.2021',
-    source: 'ТАСС',
-    title: 'Кибербезопасность 2022: главные угрозы и способы защиты',
-    tags: ['Сводки новостей'],
-    tagColor: 'rgba(124, 227, 225, 1)',
-    text: 'Эксперты по кибербезопасности прогнозируют рост числа атак с использованием программ-вымогателей в 2022 году. Компаниям рекомендуется усилить защиту периметра сети, внедрить многофакторную аутентификацию и регулярно проводить обучение сотрудников основам информационной безопасности.',
-    wordCount: 445,
-    image: '/skan/last2.png',
-    link: '#',
-  },
-]
+function stripHtml(markup) {
+  if (!markup) return ''
+  return markup.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+}
 
-const ITEMS_PER_PAGE = 2
+function formatDate(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}.${month}.${year}`
+}
 
-const SearchResults = ({ onBack }) => {
-  const [loading, setLoading] = useState(true)
+function getTagInfo(attrs) {
+  const tags = []
+  if (attrs?.isTechNews) tags.push({ label: 'Технические новости', className: 'tagOrange' })
+  if (attrs?.isAnnouncement) tags.push({ label: 'Анонсы и события', className: 'tagGreen' })
+  if (attrs?.isDigest) tags.push({ label: 'Сводки новостей', className: 'tagBlue' })
+  return tags
+}
+
+const SearchResults = ({ params, onBack }) => {
+  const { token } = useAuth()
+
+  const [histogramData, setHistogramData] = useState(null)
+  const [histogramLoading, setHistogramLoading] = useState(true)
+  const [histogramError, setHistogramError] = useState('')
+
+  const [allIds, setAllIds] = useState([])
+  const [idsLoading, setIdsLoading] = useState(true)
+
+  const [documents, setDocuments] = useState([])
+  const [docsLoading, setDocsLoading] = useState(false)
+  const [docsError, setDocsError] = useState('')
+
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE)
   const [histogramIndex, setHistogramIndex] = useState(0)
-  const trackRef = useRef(null)
+
+  const histogramsDone = useRef(false)
+  const idsDone = useRef(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
-    return () => clearTimeout(timer)
-  }, [])
+    if (!token || !params) return
 
-  const maxHistogramIndex = Math.max(0, mockHistograms.length - 3)
+    const searchBody = buildSearchBody(params)
+
+    getHistograms(token, searchBody)
+      .then((data) => {
+        setHistogramData(data)
+        histogramsDone.current = true
+      })
+      .catch((err) => {
+        setHistogramError(err?.response?.data?.message || 'Ошибка загрузки сводки')
+      })
+      .finally(() => setHistogramLoading(false))
+
+    searchObjects(token, searchBody)
+      .then((data) => {
+        const ids = (data.items || []).map((item) => item.encodedId)
+        setAllIds(ids)
+        idsDone.current = true
+      })
+      .catch(() => {})
+      .finally(() => setIdsLoading(false))
+  }, [token, params])
+
+  useEffect(() => {
+    if (!idsDone.current || allIds.length === 0) return
+    loadDocsBatch(0, ITEMS_PER_PAGE)
+  }, [allIds])
+
+  const loadDocsBatch = useCallback(
+    (start, count) => {
+      const batch = allIds.slice(start, start + count)
+      if (batch.length === 0) return
+      setDocsLoading(true)
+      setDocsError('')
+      getDocuments(token, batch)
+        .then((results) => {
+          const okDocs = results
+            .filter((r) => r.ok)
+            .map((r) => r.ok)
+          setDocuments((prev) => [...prev, ...okDocs])
+        })
+        .catch((err) => {
+          setDocsError(err?.response?.data?.message || 'Ошибка загрузки документов')
+        })
+        .finally(() => setDocsLoading(false))
+    },
+    [allIds, token],
+  )
+
+  const handleLoadMore = () => {
+    const nextVisible = visibleCount + ITEMS_PER_PAGE
+    const currentDocs = documents.length
+    if (nextVisible > currentDocs) {
+      loadDocsBatch(currentDocs, nextVisible - currentDocs)
+    }
+    setVisibleCount(nextVisible)
+  }
+
+  const loaded = documents.slice(0, visibleCount)
+  const totalIds = allIds.length
+  const allLoaded = visibleCount >= totalIds && !idsLoading
+
+  const maxHistogramIndex = Math.max(0, mergedHistograms.length - 1)
 
   const prevHistogram = () => setHistogramIndex((i) => Math.max(0, i - 1))
   const nextHistogram = () => setHistogramIndex((i) => Math.min(maxHistogramIndex, i + 1))
 
-  const visibleDocs = mockDocuments.slice(0, visibleCount)
-  const allLoaded = visibleCount >= mockDocuments.length
+  const mergedHistograms = useMemo(() => {
+    if (!histogramData?.data) return []
+    const totalMap = {}
+    const riskMap = {}
+    histogramData.data.forEach((h) => {
+      ;(h.data || []).forEach((p) => {
+        const key = p.date
+        if (h.histogramType === 'totalDocuments') totalMap[key] = p.value
+        if (h.histogramType === 'riskFactors') riskMap[key] = p.value
+      })
+    })
+    const allKeys = Object.keys({ ...totalMap, ...riskMap }).sort()
+    return allKeys.map((key) => ({
+      date: key,
+      total: totalMap[key] ?? 0,
+      risks: riskMap[key] ?? 0,
+    }))
+  }, [histogramData])
 
-  const loadMore = () => setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, mockDocuments.length))
+  const totalDocuments = mergedHistograms.reduce((s, h) => s + h.total, 0)
 
-  const handleTagClass = useCallback((tags) => {
-    if (tags.includes('Технические новости')) return 'tagOrange'
-    if (tags.includes('Анонсы и события')) return 'tagGreen'
-    if (tags.includes('Сводки новостей')) return 'tagBlue'
-    return 'tagOrange'
-  }, [])
-
-  if (loading) {
+  if (histogramLoading) {
     return (
       <section className={styles.section}>
         <div className={styles.inner}>
@@ -104,7 +149,7 @@ const SearchResults = ({ onBack }) => {
                 Поиск может занять некоторое время,<br />просим сохранять терпение.
               </p>
             </div>
-            <img className={styles.resultsHeroImg} src="/skan/searchhero.png" alt="" />
+            <img className={styles.resultsHeroImg} src={asset('searchhero.png')} alt="" />
           </div>
           <div className={styles.loader}>
             <div className={styles.spinner} />
@@ -114,10 +159,25 @@ const SearchResults = ({ onBack }) => {
     )
   }
 
+  if (histogramError) {
+    return (
+      <section className={styles.section}>
+        <div className={styles.inner}>
+          <div className={styles.resultsHero}>
+            <div className={styles.resultsHeroLeft}>
+              <h2 className={styles.resultsTitle}>Ошибка</h2>
+              <p className={styles.resultsSubtext}>{histogramError}</p>
+            </div>
+          </div>
+          <button className={styles.backBtn} onClick={onBack}>Назад к поиску</button>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className={styles.section}>
       <div className={styles.inner}>
-        {/* ── Hero block ── */}
         <div className={styles.resultsHero}>
           <div className={styles.resultsHeroLeft}>
             <h2 className={styles.resultsTitle}>Ищем. Скоро будут<br />результаты</h2>
@@ -125,13 +185,12 @@ const SearchResults = ({ onBack }) => {
               Поиск может занять некоторое время,<br />просим сохранять терпение.
             </p>
           </div>
-          <img className={styles.resultsHeroImg} src="/skan/searchhero.png" alt="" />
+          <img className={styles.resultsHeroImg} src={asset('searchhero.png')} alt="" />
         </div>
 
-        {/* ── Summary block ── */}
         <div className={styles.summaryBlock}>
           <h2 className={styles.sectionTitle}>ОБЩАЯ СВОДКА</h2>
-          <p className={styles.summaryCount}>Найдено {mockHistograms.reduce((s, h) => s + h.total, 0)} вариантов</p>
+          <p className={styles.summaryCount}>Найдено {totalDocuments || 0} вариантов</p>
 
           <div className={styles.histogramCarousel}>
             <button
@@ -149,7 +208,6 @@ const SearchResults = ({ onBack }) => {
             <div className={styles.histogramViewport}>
               <div
                 className={styles.histogramTrack}
-                ref={trackRef}
                 style={{ transform: `translateX(-${histogramIndex * 200}px)` }}
               >
                 <div className={styles.histogramHeader}>
@@ -157,9 +215,9 @@ const SearchResults = ({ onBack }) => {
                   <span className={styles.histogramCell}>Всего</span>
                   <span className={styles.histogramCell}>Риски</span>
                 </div>
-                {mockHistograms.map((h) => (
-                  <div key={h.period} className={styles.histogramRow}>
-                    <span className={styles.histogramCell}>{h.period}</span>
+                {mergedHistograms.map((h) => (
+                  <div key={h.date} className={styles.histogramRow}>
+                    <span className={styles.histogramCell}>{formatDate(h.date)}</span>
                     <span className={styles.histogramCell}>{h.total}</span>
                     <span className={`${styles.histogramCell} ${styles.riskCell}`}>{h.risks}</span>
                   </div>
@@ -181,50 +239,65 @@ const SearchResults = ({ onBack }) => {
           </div>
         </div>
 
-        {/* ── Documents block ── */}
         <div className={styles.documentsBlock}>
           <h2 className={styles.sectionTitle}>СПИСОК ДОКУМЕНТОВ</h2>
 
+          {idsLoading && documents.length === 0 && (
+            <div className={styles.loader}>
+              <div className={styles.spinner} />
+            </div>
+          )}
+
+          {docsError && <p className={styles.errorText}>{docsError}</p>}
+
           <div className={styles.documentsGrid}>
-            {visibleDocs.map((doc) => (
-              <article key={doc.id} className={styles.docCard}>
-                <div className={styles.docCardHeader}>
-                  <span className={styles.docDate}>{doc.date}</span>
-                  <span className={styles.docSource}>{doc.source}</span>
-                </div>
-                <h3 className={styles.docTitle}>{doc.title}</h3>
-                <div className={styles.docTags}>
-                  {doc.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`${styles.docTag} ${styles[handleTagClass(doc.tags)]}`}
+            {loaded.map((doc) => {
+              const tags = getTagInfo(doc.attributes)
+              const text = stripHtml(doc.content?.markup)
+              return (
+                <article key={doc.id} className={styles.docCard}>
+                  <div className={styles.docCardHeader}>
+                    <span className={styles.docDate}>{formatDate(doc.issueDate)}</span>
+                    <span className={styles.docSource}>{doc.source?.name}</span>
+                  </div>
+                  <h3 className={styles.docTitle}>{doc.title?.text || doc.title?.markup ? stripHtml(doc.title.markup) : ''}</h3>
+                  {tags.length > 0 && (
+                    <div className={styles.docTags}>
+                      {tags.map((tag) => (
+                        <span key={tag.label} className={`${styles.docTag} ${styles[tag.className]}`}>
+                          {tag.label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className={styles.docBody}>
+                    {text && <p className={styles.docText}>{text}</p>}
+                  </div>
+                  <div className={styles.docFooter}>
+                    <a
+                      href={doc.url || '#'}
+                      className={styles.docLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className={styles.docBody}>
-                  <img className={styles.docBodyImg} src={doc.image} alt="" />
-                  <p className={styles.docText}>{doc.text}</p>
-                </div>
-                <div className={styles.docFooter}>
-                  <a
-                    href={doc.link}
-                    className={styles.docLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Читать в источнике
-                  </a>
-                  <span className={styles.docWords}>{doc.wordCount} слов</span>
-                </div>
-              </article>
-            ))}
+                      Читать в источнике
+                    </a>
+                    <span className={styles.docWords}>{doc.attributes?.wordCount || 0} слов</span>
+                  </div>
+                </article>
+              )
+            })}
           </div>
 
-          {!allLoaded && (
+          {docsLoading && (
+            <div className={styles.loader}>
+              <div className={styles.spinner} />
+            </div>
+          )}
+
+          {!idsLoading && !allLoaded && !docsLoading && (
             <div className={styles.loadMoreRow}>
-              <button className={styles.loadMoreBtn} onClick={loadMore}>
+              <button className={styles.loadMoreBtn} onClick={handleLoadMore}>
                 Показать больше
               </button>
             </div>
@@ -237,6 +310,52 @@ const SearchResults = ({ onBack }) => {
       </div>
     </section>
   )
+}
+
+function buildSearchBody(params) {
+  return {
+    intervalType: 'month',
+    histogramTypes: ['totalDocuments', 'riskFactors'],
+    issueDateInterval: {
+      startDate: params.dateFrom ? `${params.dateFrom}T00:00:00+03:00` : '2019-01-01T00:00:00+03:00',
+      endDate: params.dateTo ? `${params.dateTo}T23:59:59+03:00` : '2025-12-31T23:59:59+03:00',
+    },
+    searchContext: {
+      targetSearchEntitiesContext: {
+        targetSearchEntities: [
+          {
+            type: 'company',
+            sparkId: null,
+            entityId: null,
+            inn: parseInt(params.inn, 10),
+            maxFullness: !!params.maxFullness,
+            inBusinessNews: params.inBusinessNews ? true : null,
+          },
+        ],
+        onlyMainRole: !!params.onlyMainRole,
+        tonality: params.tonality || 'any',
+        onlyWithRiskFactors: !!params.onlyWithRiskFactors,
+        riskFactors: { and: [], or: [], not: [] },
+        themes: { and: [], or: [], not: [] },
+      },
+      themesFilter: { and: [], or: [], not: [] },
+    },
+    searchArea: {
+      includedSources: [],
+      excludedSources: [],
+      includedSourceGroups: [],
+      excludedSourceGroups: [],
+    },
+    attributeFilters: {
+      excludeTechNews: !params.includeTechNews,
+      excludeAnnouncements: !params.includeAnnouncements,
+      excludeDigests: !params.includeDigests,
+    },
+    similarMode: 'duplicates',
+    limit: params.limit || 100,
+    sortType: 'sourceInfluence',
+    sortDirectionType: 'desc',
+  }
 }
 
 export default SearchResults

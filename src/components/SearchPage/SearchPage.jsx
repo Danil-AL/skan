@@ -1,34 +1,69 @@
 import { useState } from 'react'
 import SearchResults from './SearchResults'
+import { asset } from '../../utils/assets'
 import styles from './SearchPage.module.css'
 
-const tonalityOptions = ['Любая', 'Позитивная', 'Негативная', 'Нейтральная']
+const tonalityOptions = [
+  { label: 'Любая', value: 'any' },
+  { label: 'Позитивная', value: 'positive' },
+  { label: 'Негативная', value: 'negative' },
+]
 
 const checkboxes = [
-  'Признак максимальной полноты',
-  'Упоминания в бизнес-контексте',
-  'Главная роль в публикации',
-  'Публикации только с риск-факторами',
-  'Включать технические новости рынков',
-  'Включать анонсы и календари',
-  'Включать сводки новостей',
+  { label: 'Признак максимальной полноты', key: 'maxFullness' },
+  { label: 'Упоминания в бизнес-контексте', key: 'inBusinessNews' },
+  { label: 'Главная роль в публикации', key: 'onlyMainRole' },
+  { label: 'Публикации только с риск-факторами', key: 'onlyWithRiskFactors' },
+  { label: 'Включать технические новости рынков', key: 'includeTechNews' },
+  { label: 'Включать анонсы и календари', key: 'includeAnnouncements' },
+  { label: 'Включать сводки новостей', key: 'includeDigests' },
 ]
+
+function isValidInn(inn) {
+  if (!/^\d{10}$/.test(inn)) return false
+  const coefficients = [2, 4, 10, 3, 5, 9, 4, 6, 8]
+  let sum = 0
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(inn[i]) * coefficients[i]
+  }
+  let check = sum % 11
+  if (check > 9) check %= 10
+  return check === parseInt(inn[9])
+}
 
 const SearchPage = () => {
   const [searching, setSearching] = useState(false)
+  const [searchParams, setSearchParams] = useState(null)
   const [inn, setInn] = useState('')
-  const [tonality, setTonality] = useState('Любая')
+  const [tonality, setTonality] = useState('any')
   const [docCount, setDocCount] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [checked, setChecked] = useState(checkboxes.map(() => false))
   const [innError, setInnError] = useState('')
+  const [dateError, setDateError] = useState('')
 
-  const isInnValid = /^\d{10}$/.test(inn)
-  const canSearch = isInnValid
+  const today = new Date().toISOString().split('T')[0]
+
+  const isInnValid = isValidInn(inn)
+  const docCountNum = parseInt(docCount, 10)
+  const isDocCountValid = docCount && docCountNum >= 1 && docCountNum <= 1000
+
+  const dateFromObj = dateFrom ? new Date(dateFrom) : null
+  const dateToObj = dateTo ? new Date(dateTo) : null
+  const now = new Date()
+
+  const isDatesValid =
+    dateFrom &&
+    dateTo &&
+    dateFromObj <= dateToObj &&
+    dateFromObj <= now &&
+    dateToObj <= now
+
+  const canSearch = isInnValid && isDocCountValid && isDatesValid && !innError
 
   if (searching) {
-    return <SearchResults onBack={() => setSearching(false)} />
+    return <SearchResults params={searchParams} onBack={() => setSearching(false)} />
   }
 
   const handleCheckbox = (index) => {
@@ -43,19 +78,56 @@ const SearchPage = () => {
     const v = e.target.value.replace(/\D/g, '').slice(0, 10)
     setInn(v)
     if (innError) setInnError('')
+    if (dateError) setDateError('')
   }
 
   const handleInnBlur = () => {
-    if (inn && !isInnValid) {
+    if (inn && !isValidInn(inn)) {
       setInnError('Некорректный ИНН')
     } else {
       setInnError('')
     }
   }
 
+  const validateDates = () => {
+    if (!dateFrom || !dateTo) return
+    if (dateFromObj > dateToObj) {
+      setDateError('Дата начала не может быть позже даты конца')
+    } else if (dateFromObj > now) {
+      setDateError('Дата не может быть в будущем')
+    } else if (dateToObj > now) {
+      setDateError('Дата не может быть в будущем')
+    } else {
+      setDateError('')
+    }
+  }
+
+  const handleDateChange = (setter) => (e) => {
+    setter(e.target.value)
+    setDateError('')
+  }
+
+  const buildSearchParams = () => ({
+    inn,
+    tonality,
+    limit: docCountNum,
+    dateFrom,
+    dateTo,
+    maxFullness: checked[0],
+    inBusinessNews: checked[1],
+    onlyMainRole: checked[2],
+    onlyWithRiskFactors: checked[3],
+    includeTechNews: checked[4],
+    includeAnnouncements: checked[5],
+    includeDigests: checked[6],
+  })
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!canSearch) return
+    validateDates()
+    if (dateError) return
+    setSearchParams(buildSearchParams())
     setSearching(true)
   }
 
@@ -90,20 +162,20 @@ const SearchPage = () => {
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Тональность</label>
+                    <label className={styles.label}>Тональность <span className={styles.required}>*</span></label>
                     <select
                       className={styles.select}
                       value={tonality}
                       onChange={(e) => setTonality(e.target.value)}
                     >
                       {tonalityOptions.map((o) => (
-                        <option key={o} value={o}>{o}</option>
+                        <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Количество документов в выдаче</label>
+                    <label className={styles.label}>Количество документов в выдаче <span className={styles.required}>*</span></label>
                     <input
                       className={styles.input}
                       type="number"
@@ -116,34 +188,39 @@ const SearchPage = () => {
                   </div>
 
                   <div className={styles.fieldGroup}>
-                    <label className={styles.label}>Диапазон поиска</label>
+                    <label className={styles.label}>Диапазон поиска <span className={styles.required}>*</span></label>
                     <div className={styles.dateRow}>
                       <input
-                        className={styles.dateInput}
+                        className={`${styles.dateInput}${dateError ? ' ' + styles.inputError : ''}`}
                         type="date"
+                        max={today}
                         value={dateFrom}
-                        onChange={(e) => setDateFrom(e.target.value)}
+                        onChange={handleDateChange(setDateFrom)}
+                        onBlur={validateDates}
                       />
                       <input
-                        className={styles.dateInput}
+                        className={`${styles.dateInput}${dateError ? ' ' + styles.inputError : ''}`}
                         type="date"
+                        max={today}
                         value={dateTo}
-                        onChange={(e) => setDateTo(e.target.value)}
+                        onChange={handleDateChange(setDateTo)}
+                        onBlur={validateDates}
                       />
                     </div>
+                    {dateError && <span className={styles.errorText}>{dateError}</span>}
                   </div>
                 </div>
 
                 <div className={styles.checkboxesColumn}>
-                  {checkboxes.map((text, i) => (
-                    <label key={text} className={styles.checkboxLabel}>
+                  {checkboxes.map((cb, i) => (
+                    <label key={cb.key} className={styles.checkboxLabel}>
                       <input
                         className={styles.checkbox}
                         type="checkbox"
                         checked={checked[i]}
                         onChange={() => handleCheckbox(i)}
                       />
-                      {text}
+                      {cb.label}
                     </label>
                   ))}
                 </div>
@@ -166,10 +243,10 @@ const SearchPage = () => {
 
           <div className={styles.imagesBlock}>
             <div className={styles.topImages}>
-              <img className={styles.docImg} src="/skan/Document.png" alt="" />
-              <img className={styles.foldersImg} src="/skan/Folders.png" alt="" />
+              <img className={styles.docImg} src={asset('Document.png')} alt="" />
+              <img className={styles.foldersImg} src={asset('Folders.png')} alt="" />
             </div>
-            <img className={styles.innheroImg} src="/skan/innhero.png" alt="" />
+            <img className={styles.innheroImg} src={asset('innhero.png')} alt="" />
           </div>
         </div>
       </div>

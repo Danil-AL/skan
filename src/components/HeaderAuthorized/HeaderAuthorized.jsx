@@ -1,16 +1,17 @@
 import { useAuth } from '../../context/useAuth'
-import styles from './HeaderAuthorized.module.css';
+import { asset } from '../../utils/assets'
+import styles from './HeaderAuthorized.module.css'
 
 const HeaderAuthorized = ({ onNavigate }) => {
-  const { user, logout } = useAuth()
+  const { user, infoLoading, logout } = useAuth()
 
-  const { name, avatarSrc, usedCount, totalCount } = user
+  const { name, avatarSrc, usedCount, totalCount } = user || {}
 
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
         <a href="/" className={styles.logo} onClick={(e) => { e.preventDefault(); onNavigate('home') }}>
-          <img src="/skan/header-logo.png" alt="СКАН" />
+          <img src={asset('header-logo.png')} alt="СКАН" />
         </a>
 
         <nav className={styles.nav}>
@@ -21,14 +22,29 @@ const HeaderAuthorized = ({ onNavigate }) => {
 
         <div className={styles.userArea}>
           <div className={styles.usage}>
-            <div className={styles.usageRow}>
-              <span className={styles.usageLabel}>Использовано компаний</span>
-              <span className={styles.usageValue}>{usedCount}</span>
-            </div>
-            <div className={styles.usageRow}>
-              <span className={styles.usageLabel}>Лимит по компаниям</span>
-              <span className={styles.usageValueMuted}>{totalCount}</span>
-            </div>
+            {infoLoading ? (
+              <>
+                <div className={styles.usageRow}>
+                  <span className={styles.usageLabel}>Использовано компаний</span>
+                  <span className={styles.usageValue}>--</span>
+                </div>
+                <div className={styles.usageRow}>
+                  <span className={styles.usageLabel}>Лимит по компаниям</span>
+                  <span className={styles.usageValueMuted}>--</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.usageRow}>
+                  <span className={styles.usageLabel}>Использовано компаний</span>
+                  <span className={styles.usageValue}>{usedCount}</span>
+                </div>
+                <div className={styles.usageRow}>
+                  <span className={styles.usageLabel}>Лимит по компаниям</span>
+                  <span className={styles.usageValueMuted}>{totalCount}</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className={styles.user}>
@@ -38,7 +54,7 @@ const HeaderAuthorized = ({ onNavigate }) => {
                 <img src={avatarSrc} alt={name} className={styles.avatarImg} />
               ) : (
                 <div className={styles.avatarPlaceholder}>
-                  {name.charAt(0)}
+                  {name ? name.charAt(0) : '?'}
                 </div>
               )}
             </div>
@@ -49,7 +65,7 @@ const HeaderAuthorized = ({ onNavigate }) => {
         </div>
       </div>
     </header>
-  );
-};
+  )
+}
 
-export default HeaderAuthorized;
+export default HeaderAuthorized

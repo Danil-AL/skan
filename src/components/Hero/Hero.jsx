@@ -1,6 +1,10 @@
-import styles from './Hero.module.css';
+import { useAuth } from '../../context/useAuth'
+import { asset } from '../../utils/assets'
+import styles from './Hero.module.css'
 
 const Hero = ({ onSearch }) => {
+  const { user } = useAuth()
+
   return (
     <section className={styles.hero}>
       <div className={styles.inner}>
@@ -15,14 +19,16 @@ const Hero = ({ onSearch }) => {
             Комплексный анализ публикаций, получение данных в формате PDF
             на электронную почту
           </p>
-          <button className={styles.btn} onClick={onSearch}>Запросить данные</button>
+          {user && (
+            <button className={styles.btn} onClick={onSearch}>Запросить данные</button>
+          )}
         </div>
         <div className={styles.right}>
-          <img src="/skan/man.png" alt="man" className={styles.image} />
+          <img src={asset('man.png')} alt="man" className={styles.image} />
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default Hero;
+export default Hero

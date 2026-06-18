@@ -1,3 +1,4 @@
+import { asset } from '../../utils/assets';
 import styles from './Footer.module.css';
 
 
@@ -8,7 +9,7 @@ const Footer = () => {
       <div className={styles.inner}>
        
         <a href="/" className={styles.logo}>
-          <img src="/skan/footer-logo.png" alt="СКАН" />
+          <img src={asset('footer-logo.png')} alt="СКАН" />
         </a>
 
         <div className={styles.right}>

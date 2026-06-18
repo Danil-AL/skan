@@ -1,8 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
-export default defineConfig({
-  base: '/skan/',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/skan/' : '/',
   plugins: [react()],
-})
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://gateway.scan-interfax.ru',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+}))

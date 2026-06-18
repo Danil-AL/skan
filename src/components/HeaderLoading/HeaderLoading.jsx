@@ -1,3 +1,4 @@
+import { asset } from '../../utils/assets';
 import styles from './HeaderLoading.module.css';
 
 
@@ -6,7 +7,7 @@ const HeaderLoading = () => {
     <header className={styles.header}>
       <div className={styles.inner}>
         <a href="/" className={styles.logo}>
-          <img src="/skan/header-logo.png" alt="СКАН" />
+          <img src={asset('header-logo.png')} alt="СКАН" />
         </a>
 
         <nav className={styles.nav}>
