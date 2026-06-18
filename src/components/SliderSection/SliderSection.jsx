@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { asset } from '../../utils/assets'
 import styles from './SliderSection.module.css';
 
 const defaultCards = [
-  { id: 1, logo: '/time.svg', text: 'Высокая и оперативная скорость обработки заявки' },
-  { id: 2, logo: '/loop.svg', text: 'Огромная комплексная база данных, обеспечивающая объективный ответ на запрос' },
-  { id: 3, logo: '/def.svg', text: 'Защита конфиденциальных сведений, не подлежащих разглашению по федеральному законодательству' },
-  { id: 4, logo: '/time.svg', text: 'Высокая и оперативная скорость обработки заявки' },
-  { id: 5, logo: '/loop.svg', text: 'Огромная комплексная база данных, обеспечивающая объективный ответ на запрос' },
-  { id: 6, logo: '/def.svg', text: 'Защита конфиденциальных сведений, не подлежащих разглашению по федеральному законодательству' },
+  { id: 1, logo: 'time.svg', text: 'Высокая и оперативная скорость обработки заявки' },
+  { id: 2, logo: 'loop.svg', text: 'Огромная комплексная база данных, обеспечивающая объективный ответ на запрос' },
+  { id: 3, logo: 'def.svg', text: 'Защита конфиденциальных сведений, не подлежащих разглашению по федеральному законодательству' },
+  { id: 4, logo: 'time.svg', text: 'Высокая и оперативная скорость обработки заявки' },
+  { id: 5, logo: 'loop.svg', text: 'Огромная комплексная база данных, обеспечивающая объективный ответ на запрос' },
+  { id: 6, logo: 'def.svg', text: 'Защита конфиденциальных сведений, не подлежащих разглашению по федеральному законодательству' },
 ];
 
 const getVisibleCount = () => (window.innerWidth <= 768 ? 1 : 3);
@@ -68,7 +69,7 @@ const SliderSection = ({ title = 'Заголовок', cards = defaultCards }) =
                 <div key={card.id} className={styles.card} ref={i === 0 ? cardRef : null}>
                   <div className={styles.cardLogo}>
                     {card.logo ? (
-                      <img src={card.logo} alt="" />
+                      <img src={asset(card.logo)} alt="" />
                     ) : (
                       <div className={styles.logoPlaceholder}>Лого</div>
                     )}
@@ -92,7 +93,7 @@ const SliderSection = ({ title = 'Заголовок', cards = defaultCards }) =
           </button>
         </div>
 
-        <img className={styles.heroImage} src="/skan/hero.png" alt="" />
+        <img className={styles.heroImage} src={asset('hero.png')} alt="" />
       </div>
     </section>
   );

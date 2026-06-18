@@ -1,6 +1,6 @@
 import { useTilt } from '../../hooks/useTilt';
 import { useAuth } from '../../context/useAuth';
-import { asset } from '../../utils/assets';
+import { asset } from '../../utils/assets'
 import styles from './TariffsSection.module.css';
 
 const tariffs = [
